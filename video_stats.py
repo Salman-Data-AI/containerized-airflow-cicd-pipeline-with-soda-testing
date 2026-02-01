@@ -22,7 +22,6 @@ def get_playlist_id():
 
         channel_items = data["items"][0]
         playlist_ID = channel_items["contentDetails"]["relatedPlaylists"]["uploads"]
-        print(playlist_ID)
         return playlist_ID
 
     except requests.exceptions.RaiseException as e:
@@ -62,8 +61,13 @@ def get_video_id_list(playlist_id):
     except requests.exceptions.RaiseException as e:
         raise e
 
+def video_batch_list(video_id_list, batch_size):
+    for video_id in range(0, len(video_id_list), batch_size):
+        yield video_id_list[video_id : video_id + batch_size]
+
 if __name__ == "__main__":
     playlist_id = get_playlist_id()
     video_id_list = get_video_id_list(playlist_id) 
-    print(video_id_list)
+    for batch in video_batch_list(video_id_list, 10):
+        print(batch)
 

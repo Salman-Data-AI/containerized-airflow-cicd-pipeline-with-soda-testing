@@ -1,5 +1,6 @@
 import requests
 import json
+from datetime import date
 
 import os
 from dotenv import load_dotenv
@@ -24,7 +25,7 @@ def get_playlist_id():
         playlist_ID = channel_items["contentDetails"]["relatedPlaylists"]["uploads"]
         return playlist_ID
 
-    except requests.exceptions.RaiseException as e:
+    except requests.exceptions.RequestException as e:
         raise e
 
 
@@ -58,7 +59,7 @@ def get_video_id_list(playlist_id):
 
         return video_ids
 
-    except requests.exceptions.RaiseException as e:
+    except requests.exceptions.RequestException as e:
         raise e
 
 
@@ -67,7 +68,7 @@ def _video_batch_list(video_id_list, batch_size):
         yield video_id_list[video_id : video_id + batch_size]
 
 def extract_video_data(video_ids):
-    extracted_data = []
+    extracted_video_data = []
 
     try:
         for batch in _video_batch_list(video_ids, MAX_RESULTS):
@@ -94,17 +95,23 @@ def extract_video_data(video_ids):
                     "commentCount": statistics.get('commentCount', None)
                 }
 
-                extracted_data.append(video_data)
+                extracted_video_data.append(video_data)
 
-        return extracted_data
+        return extracted_video_data
 
     except requests.exceptions.RequestException as e:
         raise e
+
+def save_to_json(extracted_video_data):
+    file_path = f"./data/YT_data_{date.today()}.json"
+
+    with open(file_path, "w", encoding="utf-8") as json_outfile:
+        json.dump(extracted_video_data, json_outfile, indent=4, ensure_ascii=False)
 
 
 if __name__ == "__main__":
     playlist_id = get_playlist_id()
     video_id_list = get_video_id_list(playlist_id) 
-    extracted_data = extract_video_data(video_id_list)
-    print(extracted_data)
+    extracted_video_data = extract_video_data(video_id_list)
+    save_to_json(extracted_video_data)
 
